@@ -2,6 +2,8 @@
 
 A single-page app (HTML + CSS + vanilla JS, no build) that helps 5th–6th graders learn English words with the AI built into the browser.
 
+**Live:** [Word Wizard](https://amitmerla.github.io/learn-english/) · [Present Simple](https://amitmerla.github.io/learn-english/grammar.html) (GitHub Pages, updated on every push to `main`). Progress is saved in the browser, so it doesn't carry over between the live site and localhost.
+
 ## Run
 
 ```bash
