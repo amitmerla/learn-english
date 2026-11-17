@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Word Wizard · Learn English</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/app.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪄</text></svg>">
+</head>
+<body>
+<div class="bg-orbs" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+<canvas id="fx-canvas" aria-hidden="true"></canvas>
+
+<!-- ================================================================ header -->
+<header class="app-header">
+    <div class="brand">
+        <div class="brand-logo" aria-hidden="true">🪄</div>
+        <div>
+            <h1>Word <span class="grad-text">Wizard</span></h1>
+            <p class="brand-sub">Learn English words with an AI that lives in your browser</p>
+        </div>
+    </div>
+
+    <button class="profile-chip is-empty" id="profile-chip" type="button" data-tip="Tell me your name, and the AI will make you your own magic badge!">
+        <span class="pc-badge" id="pc-badge" aria-hidden="true"></span>
+        <span class="pc-text">
+            <b id="pc-name">Who are you?</b>
+            <small id="pc-title">Make your magic badge</small>
+            <span class="pc-where" id="pc-where" dir="rtl" hidden>
+                <span class="pc-school">🏫 <span id="pc-school"></span></span>
+                <span class="pc-city">📍 <span id="pc-city"></span></span>
+            </span>
+        </span>
+    </button>
+
+    <div class="header-stats" id="header-stats">
+        <div class="hstat" data-tip="How many words are on your list right now.">
+            <b id="stat-total">0</b><span>words</span>
+        </div>
+        <div class="hstat" data-tip="Words you marked with a star ⭐ because you already know them.">
+            <b id="stat-learned">0</b><span>learned</span>
+        </div>
+        <div class="hstat hstat-ring" data-tip="Your progress: learned words out of all words.">
+            <svg viewBox="0 0 36 36"><circle class="ring-bg" cx="18" cy="18" r="15.5"/><circle class="ring-fg" id="progress-ring" cx="18" cy="18" r="15.5"/></svg>
+            <b id="stat-pct">0%</b>
+        </div>
+    </div>
+
+    <div class="header-actions">
+        <label class="lang-pick" data-tip="Choose your home language. Translations will be shown in this language.">
+            <span aria-hidden="true">🌍</span>
+            <select id="target-lang" aria-label="Translation language">
+                <option value="he">עברית · Hebrew</option>
+                <option value="ar">العربية · Arabic</option>
+                <option value="ru">Русский · Russian</option>
+                <option value="es">Español · Spanish</option>
+                <option value="fr">Français · French</option>
+                <option value="de">Deutsch · German</option>
+                <option value="pt">Português · Portuguese</option>
+                <option value="it">Italiano · Italian</option>
+                <option value="zh">中文 · Chinese</option>
+                <option value="ja">日本語 · Japanese</option>
+                <option value="hi">हिन्दी · Hindi</option>
+            </select>
+        </label>
+        <label class="voice-toggle" id="voice-toggle" hidden>
+            <span class="vt-icon" aria-hidden="true">🗣️</span>
+            <span class="vt-label"><b>קול בעברית</b><small>Hebrew voice</small></span>
+            <span class="switch"><input type="checkbox" id="home-voice" aria-label="Speak to me in Hebrew"></span>
+        </label>
+        <a class="btn btn-ghost grammar-link" href="grammar.html" data-tip="Learn and practice the Present Simple: rules in Hebrew, a quick recap, your worksheet and a quiz.">
+            <span aria-hidden="true">📘</span><span class="gl-text">Present Simple</span>
+        </a>
+        <button class="btn btn-glow" id="tour-btn" data-tip="Take a short guided tour. I will show you every part of the page and read it out loud.">
+            <span aria-hidden="true">🧭</span> Show me around
+        </button>
+    </div>
+</header>
+
+<!-- ================================================================ main grid -->
+<main class="grid">
+
+    <!-- (a) AI features -->
+    <section class="panel" id="features-panel" aria-labelledby="features-title">
+        <div class="panel-head">
+            <div class="panel-title">
+                <span class="panel-icon" aria-hidden="true">🧠</span>
+                <h2 id="features-title">AI Powers</h2>
+                <button class="help-dot" data-tip="These are the AI tools built into your browser. Green means ready. Blue means you can download it. Grey means your browser does not have it yet.">?</button>
+            </div>
+            <div class="features-actions">
+                <button class="btn btn-ghost btn-sm" id="features-refresh" data-tip="Check all AI powers again.">↻</button>
+                <button class="btn btn-ghost btn-sm fold-btn" id="features-fold" aria-controls="features-panel" aria-expanded="true" aria-label="Fold AI Powers" data-tip="Fold this panel to make more room.">‹</button>
+            </div>
+        </div>
+        <div class="power-meter" id="power-meter">
+            <div class="power-ring">
+                <svg viewBox="0 0 64 64"><circle class="ring-bg" cx="32" cy="32" r="27"/><circle class="ring-fg" id="power-ring" cx="32" cy="32" r="27"/></svg>
+                <div class="power-ring-label"><b id="power-count">0</b><span id="power-total">/0</span></div>
+            </div>
+            <div class="power-text">
+                <b id="power-headline">Checking your browser…</b>
+                <span id="power-sub">Looking for AI powers</span>
+            </div>
+        </div>
+        <div class="features-list" id="features-list"></div>
+    </section>
+
+    <!-- (d) words -->
+    <section class="panel" id="words-panel" aria-labelledby="words-title">
+        <div class="panel-head">
+            <div class="panel-title">
+                <span class="panel-icon" aria-hidden="true">📚</span>
+                <h2 id="words-title">My Words</h2>
+                <button class="help-dot" data-tip="All the words you want to learn live here. Tap a button on a card to hear it, translate it, or learn what it means.">?</button>
+            </div>
+            <div class="words-head-actions">
+                <div class="search" data-tip="Find a word in your list.">
+                    <span aria-hidden="true">🔎</span>
+                    <input id="word-search" type="search" placeholder="Find a word" aria-label="Find a word">
+                </div>
+                <div class="seg" id="word-filter" role="tablist" data-tip="Show all words, only new words, or only learned words.">
+                    <button class="active" data-filter="all">All</button>
+                    <button data-filter="new">New</button>
+                    <button data-filter="learned">⭐</button>
+                </div>
+                <button class="btn btn-glow btn-sm" id="quiz-btn" data-tip="Think you know your ⭐ words? Take the Word Challenge: meaning + writing!">🏆 Quiz</button>
+                <button class="btn btn-ghost btn-sm" id="say-all" data-tip="Listen to all your words, one after another.">🔊 All</button>
+                <button class="btn btn-ghost btn-sm" id="export-words" data-tip="Save your word list (with stars and translations) to a file. You can open it later or on another computer.">📤</button>
+                <button class="btn btn-ghost btn-sm" id="import-words" data-tip="Open a word list file you saved before. You can also drop the file here.">📥</button>
+                <input type="file" id="import-input" accept=".json,application/json" hidden>
+                <button class="btn btn-ghost btn-sm danger" id="clear-words" data-tip="Remove every word from the list. You will be asked first.">🗑</button>
+            </div>
+        </div>
+
+        <div class="add-zone" id="add-zone">
+            <form class="add-form" id="add-form" autocomplete="off">
+                <span class="add-icon" aria-hidden="true">✏️</span>
+                <input id="add-input" placeholder="Type words here… like: apple, brave, jungle" aria-label="Add words">
+                <button class="btn btn-primary" type="submit" data-tip="Add the words you typed. You can add many at once with commas.">Add</button>
+            </form>
+            <label class="drop" id="drop" data-tip="Take a photo of your word list, then drop it here or click to choose it. I will read the words for you!">
+                <input type="file" id="file-input" accept="image/*" hidden>
+                <span class="drop-icon" aria-hidden="true">📷</span>
+                <span class="drop-text"><b>Upload a photo</b><small>drop · click · paste</small></span>
+            </label>
+        </div>
+
+        <!-- image scan -->
+        <div class="scan" id="scan" hidden>
+            <div class="scan-top">
+                <div class="scan-thumb"><img id="scan-img" alt="Uploaded word list"><div class="scan-beam"></div></div>
+                <div class="scan-main">
+                    <div class="scan-title">
+                        <b id="scan-stage">Getting ready…</b>
+                        <span class="scan-engine" id="scan-engine" data-tip="Which AI is reading your photo.">—</span>
+                        <button class="btn btn-ghost btn-xs" id="scan-close" data-tip="Close the photo reader.">✕</button>
+                    </div>
+                    <div class="progress" data-tip="How far along the photo reading is.">
+                        <div class="progress-bar" id="scan-bar"></div>
+                        <span class="progress-pct" id="scan-pct">0%</span>
+                    </div>
+                    <div class="scan-stats">
+                        <div class="sstat" data-tip="All the pieces of text I found in the photo."><b id="ss-found">0</b><span>found</span></div>
+                        <div class="sstat ok" data-tip="Words I could read clearly. They were added to your list."><b id="ss-ok">0</b><span>recognized</span></div>
+                        <div class="sstat warn" data-tip="Words I was not sure about. Please help me below!"><b id="ss-unsure">0</b><span>not sure</span></div>
+                        <div class="sstat dim" data-tip="Numbers, tiny words, or words already on your list."><b id="ss-skip">0</b><span>skipped</span></div>
+                    </div>
+                    <label class="scan-opt">
+                        <span>Reader:</span>
+                        <select id="ocr-engine" data-tip="Choose which AI reads your photo. 'Auto' picks the best one your browser has.">
+                            <option value="auto">Auto (best available)</option>
+                            <option value="textdetector">Built-in Text Detector</option>
+                            <option value="nano">Gemini Nano vision</option>
+                            <option value="tesseract">Tesseract (web)</option>
+                        </select>
+                        <label class="check"><input type="checkbox" id="skip-tiny" checked> skip tiny words (a, the, is)</label>
+                    </label>
+                </div>
+            </div>
+            <ol class="scan-log" id="scan-log" aria-live="polite"></ol>
+            <div class="recog" id="recog" hidden>
+                <div class="recog-head">✅ <b>I read these words.</b> Did I get one wrong? Tap it to fix it.</div>
+                <div class="recog-list" id="recog-list"></div>
+            </div>
+            <div class="unsure" id="unsure" hidden>
+                <div class="unsure-head">🤔 <b>Help me!</b> I could not read these words. What do they say?</div>
+                <div class="unsure-list" id="unsure-list"></div>
+            </div>
+        </div>
+
+        <div class="words-grid" id="words-grid" aria-live="polite"></div>
+        <div class="empty" id="words-empty">
+            <div class="empty-art" aria-hidden="true">🦉</div>
+            <h3>Your word list is empty</h3>
+            <p>Type some words above, or upload a photo of your word list.</p>
+            <button class="btn btn-ghost" id="demo-words" data-tip="Add 8 practice words so you can try everything.">✨ Add practice words</button>
+        </div>
+    </section>
+
+    <!-- right column -->
+    <div class="col-right">
+        <!-- (c) chat -->
+        <section class="panel" id="chat-panel" aria-labelledby="chat-title">
+            <div class="panel-head">
+                <div class="panel-title">
+                    <span class="panel-icon buddy" aria-hidden="true">🦊</span>
+                    <h2 id="chat-title">Buddy</h2>
+                    <span class="mode-pill" id="chat-mode" data-tip="Shows which brain Buddy is using right now.">…</span>
+                    <button class="help-dot" data-tip="Chat with Buddy, your English helper. Tap an idea bubble or type your own question.">?</button>
+                </div>
+                <button class="btn btn-ghost btn-sm" id="chat-reset" data-tip="Start a brand new chat.">↺</button>
+            </div>
+            <div class="chat-log" id="chat-log" aria-live="polite"></div>
+            <div class="suggestions" id="suggestions" data-tip-pos="top"></div>
+            <form class="chat-form" id="chat-form" autocomplete="off">
+                <button type="button" class="btn-icon" id="chat-mic" data-tip="Talk to Buddy with your voice. Press, then speak in English.">🎤</button>
+                <input id="chat-input" placeholder="Ask Buddy anything…" aria-label="Message to Buddy">
+                <button type="submit" class="btn-icon send" id="chat-send" data-tip="Send your message.">➤</button>
+            </form>
+        </section>
+
+        <!-- (b) engine room -->
+        <section class="panel" id="engine-panel" aria-labelledby="engine-title">
+            <div class="panel-head">
+                <div class="panel-title">
+                    <span class="panel-icon" aria-hidden="true">⚙️</span>
+                    <h2 id="engine-title">AI Engine Room</h2>
+                    <button class="help-dot" data-tip="Peek inside the AI! Every question sent to the AI shows up here, with each step it takes and the answer it gives.">?</button>
+                </div>
+                <div class="engine-actions">
+                    <span class="now" id="engine-now" data-tip="What the AI is doing right this second."><i></i><span>Idle</span></span>
+                    <button class="btn btn-ghost btn-sm" id="engine-clear" data-tip="Clear the list of AI runs.">🧹</button>
+                </div>
+            </div>
+            <div class="engine-log" id="engine-log"></div>
+        </section>
+    </div>
+</main>
+
+<!-- ================================================================ overlays -->
+<div class="tooltip" id="tooltip" role="tooltip"></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<div class="tour" id="tour" hidden>
+    <div class="tour-shade" id="tour-shade"></div>
+    <div class="tour-spot" id="tour-spot"></div>
+    <div class="tour-card" id="tour-card" role="dialog" aria-labelledby="tour-title">
+        <div class="tour-mascot" aria-hidden="true">🦊</div>
+        <div class="tour-step" id="tour-step">1 / 9</div>
+        <h3 id="tour-title">Welcome!</h3>
+        <p id="tour-text"></p>
+        <div class="tour-wave" id="tour-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="tour-dots" id="tour-dots"></div>
+        <div class="tour-controls">
+            <button class="btn-icon" id="tour-prev" data-tip="Go back one step.">⏮</button>
+            <button class="btn-icon big" id="tour-play" data-tip="Pause or play the tour.">⏸</button>
+            <button class="btn-icon" id="tour-next" data-tip="Jump to the next step.">⏭</button>
+            <button class="btn-icon" id="tour-mute" data-tip="Turn the voice on or off.">🔊</button>
+            <button class="btn-icon" id="tour-close" data-tip="Close the tour.">✕</button>
+        </div>
+    </div>
+</div>
+
+<div class="quiz" id="quiz" hidden role="dialog" aria-label="Word Challenge quiz">
+    <div class="quiz-card">
+        <header class="quiz-head">
+            <span class="quiz-round" id="quiz-round">🏆 Word Challenge</span>
+            <span class="quiz-step" id="quiz-step"></span>
+            <span class="quiz-score" data-tip="Your points so far.">⭐ <b id="quiz-score">0</b></span>
+            <button class="btn-icon" id="quiz-close" data-tip="Stop the quiz. (Esc)">✕</button>
+        </header>
+        <div class="quiz-progress" data-tip="How far you are in the quiz."><div id="quiz-bar"></div></div>
+        <div class="quiz-body" id="quiz-body"></div>
+    </div>
+</div>
+
+<dialog class="modal import-modal" id="import-modal">
+    <form method="dialog">
+        <div class="modal-art" aria-hidden="true">📥</div>
+        <h3>Import a word list</h3>
+        <ul class="import-summary" id="import-summary"></ul>
+        <details class="import-skipped" id="import-skipped" hidden></details>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" value="cancel">Cancel</button>
+            <button class="btn btn-ghost danger" value="replace" id="import-replace" data-tip="Remove your current words and use only the words from the file.">Replace my list</button>
+            <button class="btn btn-primary" value="merge" id="import-merge" data-tip="Keep your words and add the new ones from the file. Stars and translations are kept.">Add new words</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog class="modal profile-modal" id="profile-modal" data-step="who" aria-labelledby="profile-heading">
+    <div class="pm-aurora" aria-hidden="true"></div>
+    <button class="btn-icon pm-close" type="button" onclick="this.closest('dialog').close()" aria-label="Close" data-tip="Close. You can come back any time.">✕</button>
+    <div class="pm-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+
+    <div class="pm-step" id="profile-who">
+        <div class="pm-hat" aria-hidden="true"><span>🧙</span><i>✨</i><i>⭐</i><i>💫</i></div>
+        <h3 id="profile-heading">Who is our new <span class="grad-text">wizard</span>?</h3>
+        <p>Tell me your name, and the AI will make you a magic badge!</p>
+
+        <label class="pm-name" data-tip="Write your name here, in English or in Hebrew.">
+            <span class="pm-label">My name is</span>
+            <input id="profile-name" type="text" maxlength="20" autocomplete="off" spellcheck="false" dir="auto" placeholder="Type your name">
+            <span class="pm-underline" aria-hidden="true"></span>
+        </label>
+        <div class="pm-letters is-empty" id="profile-letters" dir="auto" aria-hidden="true"></div>
+
+        <div class="pm-label">I am a</div>
+        <div class="gender-pick" role="radiogroup" aria-label="I am a">
+            <label class="gender-card" data-tip="Pick this if you are a boy.">
+                <input type="radio" name="gender" value="boy">
+                <span class="gc-face">👦</span><b>Boy</b><small>בן</small>
+            </label>
+            <label class="gender-card" data-tip="Pick this if you are a girl.">
+                <input type="radio" name="gender" value="girl">
+                <span class="gc-face">👧</span><b>Girl</b><small>בת</small>
+            </label>
+        </div>
+
+        <button class="btn btn-glow pm-go" id="profile-go" type="button" disabled data-tip="Write your name and pick boy or girl. Then tell me where you learn.">Next ➜</button>
+    </div>
+
+    <div class="pm-step" id="profile-where" hidden>
+        <div class="pm-hat" aria-hidden="true"><span>🏫</span><i>✨</i><i>📚</i><i>⭐</i></div>
+        <h3>Where do you learn, <span class="grad-text" id="where-name" dir="auto"></span>?</h3>
+        <p>Write it in Hebrew. It goes on your badge!</p>
+        <p class="pm-he" dir="rtl">כתבו בעברית – זה יופיע על התג!</p>
+
+        <div class="pm-fields" dir="rtl">
+            <label class="pm-field pf-school" data-tip="The name of your school, in Hebrew.">
+                <span class="pf-icon" aria-hidden="true">🏫</span>
+                <span class="pf-label"><b>בית ספר</b><small>School</small></span>
+                <input id="profile-school" type="text" lang="he" dir="rtl" maxlength="32" autocomplete="off" spellcheck="false" placeholder="למשל: הדקל">
+                <span class="pf-ok" aria-hidden="true">✓</span>
+            </label>
+            <label class="pm-field pf-city" data-tip="The city or town you live in, in Hebrew.">
+                <span class="pf-icon" aria-hidden="true">📍</span>
+                <span class="pf-label"><b>עיר</b><small>City</small></span>
+                <input id="profile-city" type="text" lang="he" dir="rtl" maxlength="24" autocomplete="off" spellcheck="false" placeholder="למשל: חיפה">
+                <span class="pf-ok" aria-hidden="true">✓</span>
+            </label>
+            <label class="pm-field pf-class" data-tip="Your class, in Hebrew. For example ו2.">
+                <span class="pf-icon" aria-hidden="true">🎓</span>
+                <span class="pf-label"><b>כיתה</b><small>Class</small></span>
+                <input id="profile-class" type="text" lang="he" dir="rtl" maxlength="6" autocomplete="off" spellcheck="false" placeholder="ו2">
+                <span class="pf-ok" aria-hidden="true">✓</span>
+            </label>
+        </div>
+        <div class="pm-hint" id="where-hint" dir="rtl" role="status" hidden>✍️ כתבו בעברית, בבקשה <small dir="ltr">(Hebrew letters, please)</small></div>
+
+        <div class="modal-actions">
+            <button class="btn btn-ghost" id="where-back" type="button" data-tip="Go back to your name.">⬅ Back</button>
+            <button class="btn btn-glow" id="profile-forge" type="button" disabled data-tip="Fill in all three. Then the AI makes your badge!">✨ Make my magic badge</button>
+        </div>
+    </div>
+
+    <div class="pm-step" id="profile-badge" hidden>
+        <div class="badge-stage" id="badge-stage">
+            <div class="bs-burst" aria-hidden="true"></div>
+            <div class="badge-big" id="badge-big"></div>
+            <div class="badge-ribbon" id="badge-ribbon" dir="rtl" hidden>
+                <span class="br-school" id="ribbon-school"></span>
+                <span class="br-class" id="ribbon-class"></span>
+            </div>
+        </div>
+        <div class="badge-name" id="badge-name" dir="auto"></div>
+        <div class="badge-city" id="badge-city-row" dir="rtl" hidden>📍 <span id="badge-city"></span></div>
+        <div class="badge-title grad-text" id="badge-title"></div>
+        <div class="badge-motto" id="badge-motto"></div>
+        <div class="badge-by" id="badge-by" data-tip="Which magic made this badge."></div>
+        <h3 class="badge-ask" id="badge-ask" aria-live="polite">Do you like it?</h3>
+        <div class="modal-actions">
+            <button class="btn btn-glow" id="badge-yes" type="button" data-tip="Keep this badge! It will show at the top of the page.">😍 I love it!</button>
+            <button class="btn btn-ghost" id="badge-again" type="button" data-tip="Not quite? The AI will make a brand new badge for you.">🔄 Make another</button>
+        </div>
+        <div class="badge-history" id="badge-history" hidden></div>
+        <button class="pm-link" id="badge-edit" type="button" data-tip="Change your name, boy / girl, school, city or class.">✏️ Change my details</button>
+    </div>
+</dialog>
+
+<dialog class="modal" id="confirm-modal">
+    <form method="dialog">
+        <div class="modal-art" aria-hidden="true">🗑️</div>
+        <h3 id="confirm-title">Are you sure?</h3>
+        <p id="confirm-text"></p>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" value="no">No, keep them</button>
+            <button class="btn btn-danger" value="yes">Yes, remove</button>
+        </div>
+    </form>
+</dialog>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

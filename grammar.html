@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Present Simple · Word Wizard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/grammar.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📘</text></svg>">
+</head>
+<body class="grammar-page">
+<div class="bg-orbs" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+<canvas id="fx-canvas" aria-hidden="true"></canvas>
+
+<header class="g-header">
+    <a class="g-back" href="index.html" data-tip="Go back to your words in Word Wizard.">
+        <span class="brand-logo" aria-hidden="true">🪄</span><span>Word Wizard</span>
+    </a>
+    <div class="g-title">
+        <h1><span class="grad-text">Present Simple</span></h1>
+        <p dir="rtl">הוֹוֶה פָּשׁוּט · לוֹמְדִים, מְתַרְגְּלִים וְנִבְחָנִים</p>
+    </div>
+    <div class="g-side">
+        <div class="g-stat" id="g-best" data-tip="Your best quiz score so far.">🏆 <b>–</b></div>
+        <button class="g-niqqud" id="g-niqqud" type="button" aria-pressed="true" data-tip="Show the Hebrew with or without niqqud (vowel marks). Buddy always reads it with niqqud.">
+            <span class="gn-icon" aria-hidden="true">אָ</span><span dir="rtl">נִקּוּד</span><span class="switch-dot" aria-hidden="true"></span>
+        </button>
+        <div class="g-voice" id="g-voice" data-tip="">🗣️ <span></span></div>
+        <a class="g-me" id="g-me" href="index.html" hidden data-tip="This is you! Tap to go back to Word Wizard."></a>
+    </div>
+</header>
+
+<nav class="g-tabs" role="tablist" aria-label="Present Simple">
+    <button role="tab" data-tab="rules" aria-selected="true" data-tip="Learn the rules, with examples. Buddy can explain them out loud.">
+        <span class="t-icon">📖</span><b dir="rtl">הַכְּלָלִים</b><small>Rules</small>
+    </button>
+    <button role="tab" data-tab="recap" data-tip="One quick sentence for each rule. Fill it in and say which rule it is.">
+        <span class="t-icon">⚡</span><b dir="rtl">חֲזָרָה מְהִירָה</b><small>Recap</small>
+    </button>
+    <button role="tab" data-tab="practice" data-tip="Your worksheet: sort the verbs and complete the sentences.">
+        <span class="t-icon">✏️</span><b dir="rtl">תִּרְגּוּל</b><small>Practice</small>
+    </button>
+    <button role="tab" data-tab="quiz" data-tip="Ten questions on all the rules. Can you get three stars?">
+        <span class="t-icon">🏆</span><b dir="rtl">מִבְחָן</b><small>Quiz</small>
+    </button>
+    <span class="g-tab-ink" aria-hidden="true"></span>
+</nav>
+
+<main class="g-main">
+
+    <!-- ============================================================ rules -->
+    <section class="g-panel" id="tab-rules" role="tabpanel">
+        <div class="talk-hero">
+            <div class="th-fox" aria-hidden="true">🦊</div>
+            <div class="th-text" dir="rtl">
+                <h2>בּוֹאוּ נִלְמַד אֶת הַכְּלָלִים יַחַד!</h2>
+                <p>בָּאדִי יַסְבִּיר כָּל כְּלָל בְּעִבְרִית וּבְאַנְגְּלִית, יִיתֵּן דּוּגְמָה, וְיִשְׁאַל אֶתְכֶם שְׁאֵלָה קְטַנָּה.</p>
+            </div>
+            <button class="btn btn-glow th-go" id="talk-start" type="button" data-tip="Buddy explains every rule out loud, in Hebrew and English, and asks you a small question after each one.">🎙️ Talk it through</button>
+        </div>
+        <div class="rules-grid" id="rules-grid"></div>
+    </section>
+
+    <!-- ============================================================ recap -->
+    <section class="g-panel" id="tab-recap" role="tabpanel" hidden>
+        <div class="g-intro" dir="rtl">
+            <h2>⚡ חֲזָרָה מְהִירָה</h2>
+            <p>הַשְׁלִימוּ כָּל מִשְׁפָּט, וּבַחֲרוּ אֵיזֶה כְּלָל עָזַר לָכֶם. הַכְּלָלִים כָּאן לְמַטָּה, אִם צָרִיךְ לְהָצִיץ 👀</p>
+        </div>
+        <div class="rule-legend" id="rule-legend" dir="rtl"></div>
+        <ol class="recap-list" id="recap-list"></ol>
+        <div class="g-actions">
+            <button class="btn btn-glow" id="recap-check" type="button" data-tip="Check all your answers and your rule numbers.">✓ בִּדְקוּ אוֹתִי · Check</button>
+            <button class="btn btn-ghost" id="recap-reset" type="button" data-tip="Clear everything and try again.">↺ שׁוּב · Again</button>
+        </div>
+        <div class="score-banner" id="recap-score" hidden></div>
+    </section>
+
+    <!-- ============================================================ practice -->
+    <section class="g-panel" id="tab-practice" role="tabpanel" hidden>
+        <div class="g-intro" dir="rtl">
+            <h2>✏️ דַּפֵּי עֲבוֹדָה</h2>
+        </div>
+        <div class="sheet-switch" role="tablist" aria-label="Worksheet">
+            <button type="button" role="tab" data-sheet="ps" aria-selected="true" data-tip="The Present simple worksheet: sort the verbs, then complete the sentences.">📄 <span>Present simple</span></button>
+            <button type="button" role="tab" data-sheet="be" aria-selected="false" data-tip="The Verb To Be worksheet: am, is, are, saying no, questions and WH words.">📄 <span>Verb To Be</span></button>
+        </div>
+
+        <div class="sheet" id="sheet-ps">
+        <div class="sheet-part" id="part-sort">
+            <h3 dir="rtl"><span class="part-no">1</span> מַיְּינוּ אֶת הַפְּעָלִים הַבָּאִים בַּטַּבְלָה, עַל־פִּי הַכְּלָלִים שֶׁלְּמַדְתֶּם.</h3>
+            <p class="part-help" dir="rtl">גִּרְרוּ כָּל פּוֹעַל לַסַּל הַנָּכוֹן, אוֹ לַחֲצוּ עַל פּוֹעַל וְאָז עַל הַסַּל. מָה מוֹסִיפִים לוֹ עִם <bdi class="en" dir="ltr">he / she / it</bdi>?</p>
+            <div class="verb-bank" id="verb-bank" dir="ltr" data-tip="Drag a verb to the right basket, or tap the verb and then the basket."></div>
+            <div class="baskets" dir="ltr">
+                <div class="basket" data-end="s" data-tip="Most verbs just add s: play → plays.">
+                    <div class="basket-head"><b>s</b><small>play → plays</small></div>
+                    <div class="basket-body"></div>
+                </div>
+                <div class="basket" data-end="es" data-tip="Verbs that end in s, sh, ch, x, z or o add es: fix → fixes, buzz → buzzes.">
+                    <div class="basket-head"><b>es</b><small>fix → fixes</small></div>
+                    <div class="basket-body"></div>
+                </div>
+                <div class="basket" data-end="ies" data-tip="Verbs that end in a letter + y change y to ies: cry → cries.">
+                    <div class="basket-head"><b>ies</b><small>cry → cries</small></div>
+                    <div class="basket-body"></div>
+                </div>
+            </div>
+            <div class="sort-msg" id="sort-msg" dir="rtl" aria-live="polite"></div>
+        </div>
+
+        <div class="sheet-part" id="part-fill">
+            <h3 dir="rtl"><span class="part-no">2</span> הַשְׁלִימוּ אֶת הַפּוֹעַל בַּמִּשְׁפָּט בַּצּוּרָה הַנְּכוֹנָה.</h3>
+            <ol class="sheet-list" id="sheet-list" dir="ltr"></ol>
+            <div class="g-actions">
+                <button class="btn btn-glow" id="sheet-check" type="button" data-tip="Check all eight sentences.">✓ בִּדְקוּ אוֹתִי · Check</button>
+                <button class="btn btn-ghost" id="sheet-reset" type="button" data-tip="Clear the sentences and try again.">↺ שׁוּב · Again</button>
+            </div>
+            <div class="score-banner" id="sheet-score" hidden></div>
+        </div>
+        </div>
+
+        <div class="sheet" id="sheet-be" hidden></div>
+
+        <div class="sheet-part more" id="part-more">
+            <h3 dir="rtl"><span class="part-no">➕</span> עוֹד תִּרְגּוּל <small>More practice</small></h3>
+            <p class="part-help" dir="rtl">בַּחֲרוּ כְּלָלִים לְתַרְגֵּל. כָּל תְּשׁוּבָה נְכוֹנָה מוֹסִיפָה לָרֶצֶף 🔥</p>
+            <div class="rule-filter" id="rule-filter" dir="rtl" data-tip="Choose which rules to practice. Tap a rule to turn it on or off."></div>
+            <div class="more-stats" id="more-stats" dir="rtl"></div>
+            <div class="more-box" id="more-box"></div>
+            <div class="g-actions"><button class="btn btn-primary" id="more-next" type="button" hidden>הַבָּא · Next ➜</button></div>
+        </div>
+    </section>
+
+    <!-- ============================================================ quiz -->
+    <section class="g-panel" id="tab-quiz" role="tabpanel" hidden>
+        <div class="quiz-start" id="gq-start">
+            <div class="gq-trophy" aria-hidden="true">🏆</div>
+            <h2 dir="rtl">מִבְחָן <bdi class="en grad-text" dir="ltr">Present Simple</bdi></h2>
+            <p dir="rtl">10 שְׁאֵלוֹת עַל כָּל הַכְּלָלִים. 9 נְכוֹנוֹת וּמַעְלָה = שְׁלוֹשָׁה כּוֹכָבִים ⭐⭐⭐</p>
+            <p class="gq-best" id="gq-best" dir="rtl"></p>
+            <button class="btn btn-glow gq-go" id="gq-go" type="button" data-tip="Start the quiz. Good luck!">🚀 הַתְחִילוּ · Start</button>
+        </div>
+        <div class="quiz-run" id="gq-run" hidden>
+            <div class="gq-top">
+                <div class="gq-dots" id="gq-dots"></div>
+                <div class="gq-count" id="gq-count"></div>
+            </div>
+            <div class="gq-box" id="gq-box"></div>
+            <div class="g-actions"><button class="btn btn-primary" id="gq-next" type="button" hidden>הַבָּא · Next ➜</button></div>
+        </div>
+        <div class="quiz-end" id="gq-end" hidden></div>
+    </section>
+</main>
+
+<!-- Buddy's talk-through bar -->
+<div class="buddy-bar" id="buddy-bar" hidden role="region" aria-label="Buddy explains the rules">
+    <div class="bb-fox" id="bb-fox" aria-hidden="true">🦊</div>
+    <div class="bb-main">
+        <div class="bb-step" id="bb-step"></div>
+        <div class="bb-say" id="bb-say" dir="rtl" aria-live="polite"></div>
+        <div class="bb-ask" id="bb-ask" hidden></div>
+    </div>
+    <div class="bb-controls">
+        <button class="btn-icon" id="bb-play" type="button" aria-label="Pause" data-tip="Pause or continue.">⏸</button>
+        <button class="btn-icon" id="bb-next" type="button" aria-label="Next rule" data-tip="Skip to the next rule.">⏭</button>
+        <button class="btn-icon" id="bb-stop" type="button" aria-label="Stop" data-tip="Stop talking.">⏹</button>
+    </div>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<div class="tooltip" id="tooltip" role="tooltip"></div>
+
+<script type="module" src="js/grammar/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "word-wizard/word-list.v1.schema.json",
+  "title": "Word Wizard word list",
+  "description": "A pupil's English word list with progress, exported from Word Wizard and importable into another session.",
+  "type": "object",
+  "required": ["format", "version", "words"],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "word-wizard.word-list",
+      "description": "Identifies the file type."
+    },
+    "version": {
+      "const": 1,
+      "description": "Format version. Files with a higher version need a newer Word Wizard."
+    },
+    "exportedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the file was exported (ISO 8601, UTC)."
+    },
+    "app": {
+      "type": "string",
+      "description": "Name and version of the app that wrote the file."
+    },
+    "homeLanguage": {
+      "$ref": "#/$defs/languageCode",
+      "description": "The translation language selected when the file was exported."
+    },
+    "stats": {
+      "type": "object",
+      "description": "Summary for humans. Ignored on import.",
+      "additionalProperties": false,
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "learned": { "type": "integer", "minimum": 0 },
+        "mastered": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "words": {
+      "type": "array",
+      "maxItems": 5000,
+      "items": { "$ref": "#/$defs/word" }
+    }
+  },
+  "$defs": {
+    "languageCode": {
+      "type": "string",
+      "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$",
+      "description": "BCP 47 language code, for example \"he\" or \"pt-BR\"."
+    },
+    "word": {
+      "type": "object",
+      "required": ["text"],
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "type": "string",
+          "pattern": "^[a-z][a-z' -]*$",
+          "maxLength": 40,
+          "description": "The English word or short phrase, lowercase."
+        },
+        "learned": { "type": "boolean", "default": false, "description": "The pupil marked it with a star." },
+        "mastered": { "type": "boolean", "default": false, "description": "The pupil passed the Word Challenge for it." },
+        "source": {
+          "enum": ["typed", "image", "buddy", "demo", "imported"],
+          "default": "imported",
+          "description": "How the word was first added."
+        },
+        "addedAt": { "type": "string", "format": "date-time" },
+        "translations": {
+          "type": "object",
+          "description": "Translations by language code.",
+          "propertyNames": { "$ref": "#/$defs/languageCode" },
+          "additionalProperties": { "type": "string", "maxLength": 200 }
+        },
+        "meaning": { "type": "string", "maxLength": 500, "description": "Simple meaning and example sentence." },
+        "sayItLike": { "type": "string", "maxLength": 100, "deprecated": true, "description": "No longer used. Old files may still have it; it is ignored on import." },
+        "example": { "type": "string", "maxLength": 200, "description": "A simple example sentence that uses the word." },
+        "exampleTranslations": {
+          "type": "object",
+          "description": "Translations of the example sentence by language code.",
+          "propertyNames": { "$ref": "#/$defs/languageCode" },
+          "additionalProperties": { "type": "string", "maxLength": 400 }
+        },
+        "pair": { "type": "string", "maxLength": 80, "description": "Memory pair: an easy everyday phrase with the word, for example \"return home\"." },
+        "pairTranslations": {
+          "type": "object",
+          "description": "Translations of the memory pair by language code.",
+          "propertyNames": { "$ref": "#/$defs/languageCode" },
+          "additionalProperties": { "type": "string", "maxLength": 200 }
+        }
+      }
+    }
+  }
+}
