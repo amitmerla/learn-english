@@ -1525,3 +1525,35 @@ button { cursor: pointer; }
 .doc-word.have { opacity: .45; text-decoration: none; cursor: default; }
 .doc-word.have b::after { content: " ✓"; color: var(--good); }
 #docfile-add:disabled { filter: grayscale(.8) brightness(.7); animation: none; cursor: not-allowed; }
+
+/* Words with more than one meaning: every meaning is a button until the pupil picks one. */
+.chip-out.senses { border-color: rgba(251, 191, 36, .5); background: linear-gradient(135deg, rgba(251, 191, 36, .14), rgba(244, 114, 182, .08)); }
+.chip-out.senses .lbl { color: var(--warn); }
+.sense-body { display: flex; flex-direction: column; gap: 5px; }
+.sense-ask { display: flex; flex-direction: column; font-size: 12px; font-weight: 700; color: var(--text-dim); }
+.sense-ask [dir="rtl"] { text-align: right; }
+.sense-pick {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    width: 100%; padding: 7px 10px; border-radius: 9px; cursor: pointer;
+    font: inherit; color: var(--text); text-align: start;
+    background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .14);
+    transition: transform .15s, background .2s, border-color .2s, box-shadow .2s;
+    animation: pop-in .35s backwards;
+}
+.sense-pick:nth-child(3) { animation-delay: .08s; }
+.sense-pick:nth-child(4) { animation-delay: .16s; }
+.sense-pick:hover, .sense-pick:focus-visible { transform: translateY(-1px); background: rgba(251, 191, 36, .16); border-color: rgba(251, 191, 36, .6); box-shadow: 0 4px 14px rgba(251, 191, 36, .18); }
+.sense-pick b { order: 2; font-size: 17px; font-weight: 700; text-align: right; flex: none; max-width: 60%; }
+.sense-pick b[dir="ltr"] { order: 0; text-align: left; }
+.sense-pick small { font-size: 12px; color: var(--text-dim); font-weight: 600; line-height: 1.3; }
+.sense-one { display: grid; grid-template-columns: 1fr auto; align-items: center; column-gap: 8px; }
+.sense-one > span { font-size: 18px; font-weight: 700; text-align: right; }
+.sense-one > span[dir="ltr"] { text-align: left; }
+.sense-one .sense-hint { grid-column: 1; font-size: 12px; font-weight: 600; color: var(--text-dim); }
+.sense-one .sense-more { grid-column: 2; grid-row: 1 / span 2; }
+.sense-more {
+    padding: 4px 8px; border-radius: 999px; cursor: pointer; font: inherit; font-size: 12px; font-weight: 800;
+    color: var(--text); background: rgba(251, 191, 36, .14); border: 1px solid rgba(251, 191, 36, .45);
+    transition: background .2s, transform .15s;
+}
+.sense-more:hover { background: rgba(251, 191, 36, .3); transform: scale(1.06); }

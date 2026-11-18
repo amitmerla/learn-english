@@ -17,6 +17,7 @@ Vanilla HTML + CSS + ES modules, no build step. Needs a server (secure context f
 - No "say it like" / syllable guide — removed. The Say button speaks the word normal, then slow.
 - The example sentence 🔊 always says English first, then the Hebrew translation (regardless of the Hebrew-voice switch). The memory-pair 🔊 adds Hebrew only when the switch is on.
 - The pupil's profile (name, boy / girl, school / city / class in Hebrew, badge) lives in `store.prefs.profile`. Gender is used only for the gendered Hebrew lines in js/profile.js (ברוך הבא / ברוכה הבאה); the rest of the app's Hebrew stays plural.
+- A word with several meanings shows all of them on its card until the pupil taps the one from the lesson (`senses` / `sense`, js/senses.js); the chosen meaning brings its own pair and example. Add a word to `SENSES` only when its meanings need different Hebrew words.
 - Memory pair = the easiest everyday phrase with the word ("return" → "return home"), shown with its translation.
 - All English shown or spoken must suit 5th–6th graders. Hebrew text is natural and gender-neutral (plural). Every component and important button has a kid-friendly tooltip. The look is "WOW": dark glass, gradients, animation, confetti.
 
@@ -35,4 +36,4 @@ Vanilla HTML + CSS + ES modules, no build step. Needs a server (secure context f
 
 ## Not verified yet
 
-The test browser had no Gemini Nano and no working Translator, so these paths were never seen working: Nano meanings/pairs/examples, Nano badge design (only the magic-dice fallback was seen), the blog page's Nano check / sentence watch / ideas (only the rule fallbacks were seen), quiz sentence grading, native tool calling, WebMCP, real translations (word, pair, example). Check them in Chrome with the AI flags on (list in README).
+The test browser had no Gemini Nano and no working Translator, so these paths were never seen working: Nano meanings/pairs/examples, Nano's list of a word's several meanings, Nano badge design (only the magic-dice fallback was seen), the blog page's Nano check / sentence watch / ideas (only the rule fallbacks were seen), quiz sentence grading, native tool calling, WebMCP, real translations (word, pair, example). Check them in Chrome with the AI flags on (list in README).

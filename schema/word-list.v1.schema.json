@@ -76,6 +76,32 @@
           "additionalProperties": { "type": "string", "maxLength": 200 }
         },
         "meaning": { "type": "string", "maxLength": 500, "description": "Simple meaning and example sentence." },
+        "senses": {
+          "type": "array",
+          "maxItems": 5,
+          "description": "Optional. A word with more than one meaning (\"light\" = bright / not heavy). Each meaning has its own translation, hint, memory pair and example.",
+          "items": {
+            "type": "object",
+            "required": ["translations"],
+            "additionalProperties": false,
+            "properties": {
+              "translations": {
+                "type": "object",
+                "propertyNames": { "$ref": "#/$defs/languageCode" },
+                "additionalProperties": { "type": "string", "maxLength": 200 }
+              },
+              "hint": { "type": "string", "maxLength": 120, "description": "Emoji and a very simple English hint." },
+              "pair": { "type": "string", "maxLength": 80 },
+              "pairTranslations": {
+                "type": "object",
+                "propertyNames": { "$ref": "#/$defs/languageCode" },
+                "additionalProperties": { "type": "string", "maxLength": 200 }
+              },
+              "example": { "type": "string", "maxLength": 200 }
+            }
+          }
+        },
+        "sense": { "type": "integer", "minimum": 0, "description": "Optional. Which of the senses the pupil picked (index). Missing: not picked yet, all are shown." },
         "sayItLike": { "type": "string", "maxLength": 100, "deprecated": true, "description": "No longer used. Old files may still have it; it is ignored on import." },
         "example": { "type": "string", "maxLength": 200, "description": "A simple example sentence that uses the word." },
         "exampleTranslations": {

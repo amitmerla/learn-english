@@ -15,6 +15,8 @@ const WORD = /^[a-z][a-z' -]*$/;
 
 /* ---------------------------------------------------------------- export */
 
+const langs = m => Object.fromEntries(Object.entries(m ?? {}).filter(([k, v]) => LANG.test(k) && typeof v === 'string' && v));
+
 export function toExport() {
     const s = store.stats;
     return {
@@ -30,6 +32,16 @@ export function toExport() {
             const tr = Object.fromEntries(Object.entries(w.tr ?? {}).filter(([k, v]) => LANG.test(k) && typeof v === 'string' && v));
             if (Object.keys(tr).length) out.translations = tr;
             if (w.meaning) out.meaning = w.meaning;
+            if (w.senses?.length > 1) {
+                out.senses = w.senses.map(x => {
+                    const o = { translations: langs(x.tr) };
+                    if (x.hint) o.hint = x.hint;
+                    if (x.pair) { o.pair = x.pair; if (Object.keys(langs(x.pairTr)).length) o.pairTranslations = langs(x.pairTr); }
+                    if (x.example) o.example = x.example;
+                    return o;
+                });
+                if (Number.isInteger(w.sense) && w.senses[w.sense]) out.sense = w.sense;
+            }
             if (w.example) {
                 out.example = w.example;
                 const etr = Object.fromEntries(Object.entries(w.exampleTr ?? {}).filter(([k, v]) => LANG.test(k) && typeof v === 'string' && v));
@@ -105,6 +117,15 @@ export function validate(data) {
         const pair = str(o.pair, 80) || builtinPair(text);
         const example = str(o.example, 200) || builtinExample(text);
         const added = Date.parse(o.addedAt);
+        // Words with more than one meaning (optional; files from before simply have none).
+        const senses = (Array.isArray(o.senses) ? o.senses : []).slice(0, 5).filter(x => x && typeof x === 'object').map(x => {
+            const s = { tr: langMap(x.translations) };
+            if (str(x.hint, 120)) s.hint = str(x.hint, 120);
+            if (str(x.pair, 80)) { s.pair = str(x.pair, 80); s.pairTr = langMap(x.pairTranslations); }
+            if (str(x.example, 200)) s.example = str(x.example, 200);
+            return s;
+        }).filter(s => Object.keys(s.tr).length);
+        const many = senses.length > 1;
         words.push({
             text,
             source: SOURCES.has(o.source) ? o.source : 'imported',
@@ -113,6 +134,7 @@ export function validate(data) {
             added: Number.isFinite(added) ? added : Date.now(),
             tr,
             meaning: str(o.meaning, 500),
+            ...(many ? { senses, sense: Number.isInteger(o.sense) && senses[o.sense] ? o.sense : null } : {}),
             pair,
             pairTr: o.pair ? langMap(o.pairTranslations) : {},
             example,

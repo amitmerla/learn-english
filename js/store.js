@@ -119,7 +119,7 @@ class Store extends EventTarget {
         }
         const from = w.text;
         // Translation, meaning, pair and example belonged to the old spelling.
-        Object.assign(w, { text: to, tr: {}, meaning: '', pair: builtinPair(to), pairTr: {}, example: builtinExample(to), exampleTr: {}, fixedFrom: from });
+        Object.assign(w, { text: to, tr: {}, senses: undefined, sense: undefined, meaning: '', pair: builtinPair(to), pairTr: {}, example: builtinExample(to), exampleTr: {}, fixedFrom: from });
         this.emit('rename', { words: [from, to] });
         return { ok: true, word: to };
     }
@@ -141,6 +141,7 @@ class Store extends EventTarget {
                 ex.mastered ||= it.mastered;
                 ex.tr = { ...it.tr, ...ex.tr };
                 ex.meaning ||= it.meaning;
+                if (!ex.senses?.length && it.senses?.length) { ex.senses = it.senses; ex.sense = it.sense; }
                 if (!ex.pair && it.pair) { ex.pair = it.pair; ex.pairTr = it.pairTr; } else if (ex.pair === it.pair) ex.pairTr = { ...it.pairTr, ...ex.pairTr };
                 if (!ex.example && it.example) { ex.example = it.example; ex.exampleTr = it.exampleTr; } else if (ex.example === it.example) ex.exampleTr = { ...it.exampleTr, ...ex.exampleTr };
                 out.updated.push(ex.text);

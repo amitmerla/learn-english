@@ -6,6 +6,7 @@ import { hooks } from './tools.js';
 import { talk, homeVoiceOn } from './voice.js';
 import { ask, lmReady, translate, speak, speakParts, hasVoice, listen, detectLanguage, toEnglish, state } from './ai.js';
 import { builtinPair, wordIn } from './pairs.js';
+import { builtinSenses, findSenses, pickPatch, senseText, allMeanings } from './senses.js';
 
 const grid = $('#words-grid');
 const empty = $('#words-empty');
@@ -27,7 +28,9 @@ function paintInfo(w, node) {
     const lang = store.lang;
     node.querySelector('.word-text').textContent = w.text;
     node.style.setProperty('--hue', hue(w.text));
-    if (w.tr?.[lang]) info.append(chip('tr', LANG_NAMES[lang], document.createTextNode(w.tr[lang]), { dir: RTL.has(lang) ? 'rtl' : 'ltr', lang }));
+    const senses = sensesOf(w, lang);
+    if (senses) info.append(sensesChip(w, senses, lang));
+    else if (w.tr?.[lang]) info.append(chip('tr', LANG_NAMES[lang], document.createTextNode(w.tr[lang]), { dir: RTL.has(lang) ? 'rtl' : 'ltr', lang }));
     if (w.meaning) info.append(chip('mean', 'Meaning', document.createTextNode(w.meaning)));
     if (w.pair) info.append(pairChip(w, lang));
     if (w.example) info.append(exampleChip(w, lang));
@@ -38,6 +41,38 @@ function paintInfo(w, node) {
     node.classList.toggle('learned', !!w.learned && !w.mastered);
     node.classList.toggle('mastered', !!w.mastered);
     node.querySelector('[data-act="learn"]').classList.toggle('on', !!w.learned);
+}
+
+// A word with more than one meaning: its own list, or (for a word translated before) the built-in one.
+function sensesOf(w, lang) {
+    const list = w.senses?.length > 1 ? w.senses : (!w.senses && w.tr?.[lang] ? builtinSenses(w.text, lang) : null);
+    return list?.some(s => senseText(s, lang)) ? list : null;
+}
+
+// The translation chip of a word with several meanings. Not chosen yet: every meaning, each one a button.
+// Chosen: that meaning, and a small button to see the others again.
+function sensesChip(w, senses, lang) {
+    const dir = RTL.has(lang) ? 'rtl' : 'ltr';
+    const he = lang === 'he';
+    const i = Number.isInteger(w.sense) && senses[w.sense] ? w.sense : -1;
+    if (i >= 0) {
+        const s = senses[i];
+        return chip('tr', LANG_NAMES[lang], el('div', { class: 'sense-one' },
+            el('span', { dir, lang, text: senseText(s, lang) }),
+            s.hint ? el('small', { class: 'sense-hint', text: s.hint }) : '',
+            el('button', {
+                class: 'sense-more', 'data-act': 'showSenses',
+                'data-tip': he ? `“${w.text}” has ${senses.length} meanings. Tap to see them all. · למילה יש ${senses.length} משמעויות` : `“${w.text}” has ${senses.length} meanings. Tap to see them all.`,
+                text: `🔀 ${senses.length}`,
+            })), { dir: 'ltr' });
+    }
+    return chip('tr senses', `${LANG_NAMES[lang]} · ${senses.length} meanings`, el('div', { class: 'sense-body' },
+        el('div', { class: 'sense-ask' }, el('span', { text: 'Which one is in your lesson? Tap it!' }),
+            he ? el('span', { dir: 'rtl', lang: 'he', text: 'איזו משמעות מתאימה לשיעור?' }) : ''),
+        ...senses.map((s, n) => el('button', {
+            class: 'sense-pick', 'data-act': 'pickSense', 'data-i': n,
+            'data-tip': `Tap if this is the meaning in your lesson. The memory pair and the example will fit it too.`,
+        }, el('b', { dir, lang, text: senseText(s, lang) || '?' }), s.hint ? el('small', { text: s.hint }) : ''))));
 }
 
 // "Remember it" chip: the memory pair with the word highlighted, its translation, and a speak button.
@@ -214,11 +249,38 @@ const ACTIONS = {
 
     async tr(w, btn) {
         await busy(btn, async () => {
-            const t = await translate(w.text);
-            store.update(w.text, { tr: { ...w.tr, [store.lang]: t } });
+            const lang = store.lang;
+            const senses = await findSenses(w.text, lang, LANG_NAMES[lang]);
+            if (senses.length > 1) {
+                // Several meanings: show them all until the pupil picks one (or keep the one already picked).
+                const keep = Number.isInteger(w.sense) && senseText(w.senses?.[w.sense] ?? {}, lang) && w.senses.length === senses.length ? w.sense : null;
+                store.update(w.text, keep === null ? { senses, sense: null, tr: { ...w.tr, [lang]: allMeanings(senses, lang) } } : pickPatch(w, senses, keep, lang));
+                if (keep === null) {
+                    toast(`“${w.text}” has ${senses.length} meanings! Tap the one from your lesson.`, { icon: '🔀', ms: 5000 });
+                    talk(`${w.text} has ${senses.length} meanings. Tap the one from your lesson.`, `למילה [[${w.text}]] יש ${senses.length === 2 ? 'שתי' : 'שלוש'} משמעויות. בחרו את המשמעות מהשיעור.`);
+                }
+            } else {
+                store.update(w.text, { senses: [], sense: null, tr: { ...w.tr, [lang]: senseText(senses[0], lang) } });
+            }
             await translatePair(w);
             await translateExample(w);
         });
+    },
+
+    pickSense(w, btn) {
+        const lang = store.lang;
+        const senses = sensesOf(w, lang);
+        const i = Number(btn.dataset.i);
+        if (!senses?.[i]) return;
+        confettiAt(btn, 30);
+        store.update(w.text, pickPatch(w, senses, i, lang));
+        translatePair(store.find(w.text));
+    },
+
+    showSenses(w) {
+        const lang = store.lang;
+        const senses = sensesOf(w, lang);
+        if (senses) store.update(w.text, { senses, sense: null, tr: { ...w.tr, [lang]: allMeanings(senses, lang) } });
     },
 
     // Always English first, then the Hebrew explanation (translated first if needed).
@@ -267,6 +329,10 @@ const ACTIONS = {
     },
 
     async mean(w, btn) {
+        const chosenSense = x => {
+            const s = Number.isInteger(x.sense) && x.senses?.[x.sense];
+            return s ? `\nUse this meaning of the word only: ${s.hint || ''} (in ${LANG_NAMES[store.lang]}: ${senseText(s, store.lang)}).` : '';
+        };
         if (!lmReady()) {
             const pair = builtinPair(w.text);
             toast(pair ? 'Meanings need the Gemini Nano AI brain. Here is the translation and a pair to remember it!' : 'Meanings need the Gemini Nano AI brain. Showing the translation instead!', { icon: '🧠' });
@@ -276,7 +342,7 @@ const ACTIONS = {
         await busy(btn, async () => {
             const r = await ask({
                 title: `What does “${w.text}” mean?`, icon: '💡',
-                prompt: `Explain the English word "${w.text}" to a child in 5th grade.
+                prompt: `Explain the English word "${w.text}" to a child in 5th grade.${chosenSense(w)}
 Give: a very simple meaning (max 12 words), one short and simple example sentence that uses the word (max 9 words, easy words only), one emoji that fits,
 and a memory pair: the easiest, most common 2-3 word phrase with "${w.text}" that a 10-year-old hears every day, so the word is easy to remember.
 Good memory pairs: return -> "return home", brave -> "brave lion", borrow -> "borrow a book", delicious -> "delicious pizza".`,

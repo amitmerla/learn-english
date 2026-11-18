@@ -5,6 +5,7 @@
 
 import { $, el, toast, confettiAt } from './util.js';
 import { store, cleanWord, TINY } from './store.js';
+import { builtinSenses, matchSense, pickPatch } from './senses.js';
 
 const WORD_TYPES = [
     'application/msword',
@@ -294,7 +295,11 @@ function addChosen() {
     for (const b of chosen) {
         if (!b.dataset.he || !r.added.includes(b.dataset.word)) continue;
         const w = store.find(b.dataset.word);
-        if (w && !w.tr?.he) store.update(w.text, { tr: { ...w.tr, he: b.dataset.he } });
+        if (!w || w.tr?.he) continue;
+        // A word with several meanings: the file's Hebrew tells which one the lesson means.
+        const senses = builtinSenses(w.text, 'he');
+        const i = senses ? matchSense(senses, b.dataset.he, 'he') : -1;
+        store.update(w.text, i >= 0 ? { ...pickPatch(w, senses, i, 'he'), tr: { ...w.tr, he: b.dataset.he } } : { senses: [], tr: { ...w.tr, he: b.dataset.he } });
     }
     if (r.added.length) {
         toast(r.added.length === 1 ? `Added “${r.added[0]}”!` : `Added ${r.added.length} words from your file!`, { icon: '📄' });
