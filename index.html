@@ -71,6 +71,9 @@
             <span class="vt-label"><b>קול בעברית</b><small>Hebrew voice</small></span>
             <span class="switch"><input type="checkbox" id="home-voice" aria-label="Speak to me in Hebrew"></span>
         </label>
+        <a class="btn btn-ghost grammar-link" href="blog.html" data-tip="Write a short blog about yourself, in English. Buddy helps you while you write!">
+            <span aria-hidden="true">✍️</span><span class="gl-text">My Blog</span>
+        </a>
         <a class="btn btn-ghost grammar-link" href="grammar.html" data-tip="Learn and practice the Present Simple: rules in Hebrew, a quick recap, your worksheet and a quiz.">
             <span aria-hidden="true">📘</span><span class="gl-text">Present Simple</span>
         </a>
@@ -142,10 +145,10 @@
                 <input id="add-input" placeholder="Type words here… like: apple, brave, jungle" aria-label="Add words">
                 <button class="btn btn-primary" type="submit" data-tip="Add the words you typed. You can add many at once with commas.">Add</button>
             </form>
-            <label class="drop" id="drop" data-tip="Take a photo of your word list, then drop it here or click to choose it. I will read the words for you!">
-                <input type="file" id="file-input" accept="image/*" hidden>
+            <label class="drop" id="drop" data-tip="Have your word list as a photo or in a Word file? Drop it here or click to choose it. I will read the words for you!">
+                <input type="file" id="file-input" accept="image/*,.doc,.docx,.rtf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
                 <span class="drop-icon" aria-hidden="true">📷</span>
-                <span class="drop-text"><b>Upload a photo</b><small>drop · click · paste</small></span>
+                <span class="drop-text"><b>Upload a photo or Word file</b><small>drop · click · paste</small></span>
             </label>
         </div>
 
@@ -288,6 +291,23 @@
             <button class="btn btn-ghost" value="cancel">Cancel</button>
             <button class="btn btn-ghost danger" value="replace" id="import-replace" data-tip="Remove your current words and use only the words from the file.">Replace my list</button>
             <button class="btn btn-primary" value="merge" id="import-merge" data-tip="Keep your words and add the new ones from the file. Stars and translations are kept.">Add new words</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog class="modal docfile-modal" id="docfile-modal" aria-labelledby="docfile-title">
+    <form method="dialog">
+        <div class="modal-art" aria-hidden="true">📄</div>
+        <h3 id="docfile-title">I found words!</h3>
+        <p id="docfile-text"></p>
+        <div class="docfile-tools">
+            <button class="btn btn-ghost btn-xs" type="button" id="docfile-all" data-tip="Choose every word.">Select all</button>
+            <button class="btn btn-ghost btn-xs" type="button" id="docfile-none" data-tip="Clear every word, then tap only the ones you want.">Select none</button>
+        </div>
+        <div class="docfile-words" id="docfile-words" data-tip="Lit-up words will be added. Tap a word to leave it out."></div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" value="cancel">Cancel</button>
+            <button class="btn btn-glow" value="add" id="docfile-add" data-tip="Add the words you chose to your list.">Add words</button>
         </div>
     </form>
 </dialog>

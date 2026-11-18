@@ -5,6 +5,7 @@
 import { $, el, clock, sleep, toast, confettiAt, inlineEdit } from './util.js';
 import { store, cleanWord, isEnglishWord, TINY } from './store.js';
 import { engine } from './engine.js';
+import { isWordFile, importWordFile } from './docfile.js';
 import { state, visionReady, lmReady, readImageWithNano, ask, speak } from './ai.js';
 import { fixWord } from './words.js';
 import { talk } from './voice.js';
@@ -350,7 +351,8 @@ export async function scanImage(file) {
 export function initOcr() {
     const drop = $('#drop');
     const file = $('#file-input');
-    file.addEventListener('change', () => { if (file.files[0]) scanImage(file.files[0]); file.value = ''; });
+    const open = f => (isWordFile(f) ? importWordFile(f) : scanImage(f));
+    file.addEventListener('change', () => { if (file.files[0]) open(file.files[0]); file.value = ''; });
 
     const panel = $('#words-panel');
     ['dragenter', 'dragover'].forEach(t => panel.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
@@ -360,8 +362,8 @@ export function initOcr() {
     }));
     panel.addEventListener('drop', e => {
         e.preventDefault();
-        const f = [...e.dataTransfer.files].find(f => f.type.startsWith('image/'));
-        if (f) scanImage(f);
+        const f = [...e.dataTransfer.files].find(f => f.type.startsWith('image/') || isWordFile(f));
+        if (f) open(f);
     });
 
     document.addEventListener('paste', e => {

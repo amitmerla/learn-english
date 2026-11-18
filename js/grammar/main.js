@@ -11,6 +11,7 @@ import { initRecap } from './recap.js';
 import { initPractice } from './practice.js';
 import { initQuiz } from './quiz.js';
 import { progress } from './progress.js';
+import { initNiqqudView } from '../niqqud-view.js';
 
 initTooltips();
 
@@ -43,42 +44,7 @@ paintVoice();
 
 /* ---------------------------------------------------------------- niqqud on screen */
 
-// All the Hebrew on this page is written with full niqqud (and spoken that way).
-// With the switch off, every text node is shown without the marks; the pointed text is kept to switch back.
-const MARKS = /[\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7]/g;
-const HAS_MARKS = /[\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7]/;
-const pointed = new WeakMap();
-const niqqudOn = () => store.prefs.niqqud !== false;
-
-function paintText(node) {
-    if (!pointed.has(node)) {
-        if (!HAS_MARKS.test(node.data)) return;
-        pointed.set(node, node.data);
-    }
-    const text = niqqudOn() ? pointed.get(node) : pointed.get(node).replace(MARKS, '');
-    if (node.data !== text) node.data = text;
-}
-function paintTree(root) {
-    if (root.nodeType === Node.TEXT_NODE) return paintText(root);
-    const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-    while (walk.nextNode()) paintText(walk.currentNode);
-}
-function paintNiqqud() {
-    const on = niqqudOn();
-    document.body.classList.toggle('niqqud', on);
-    $('#g-niqqud').setAttribute('aria-pressed', String(on));
-    paintTree(document.body);
-}
-// New cards, feedback and Buddy's lines are painted as they appear.
-new MutationObserver(list => {
-    for (const m of list) m.addedNodes.forEach(n => { if (n.nodeType === Node.TEXT_NODE || n.nodeType === Node.ELEMENT_NODE) paintTree(n); });
-}).observe(document.body, { childList: true, subtree: true });
-$('#g-niqqud').addEventListener('click', () => {
-    store.setPref('niqqud', !niqqudOn());
-    paintNiqqud();
-    requestAnimationFrame(moveInk);
-});
-paintNiqqud();
+initNiqqudView($('#g-niqqud'), () => requestAnimationFrame(moveInk));
 
 /* ---------------------------------------------------------------- tabs */
 
@@ -312,4 +278,6 @@ initQuiz();
 showTab(location.hash.slice(1) || 'rules', { scroll: false });
 // Tab widths change once the web fonts arrive.
 document.fonts?.ready.then(moveInk);
+// Tab widths also change when the ניקוד switch or the fonts change the labels.
+new ResizeObserver(moveInk).observe($('.g-tabs'));
 requestAnimationFrame(moveInk);

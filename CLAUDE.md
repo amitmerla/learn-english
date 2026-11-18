@@ -23,6 +23,7 @@ Vanilla HTML + CSS + ES modules, no build step. Needs a server (secure context f
 ## Conventions
 
 - Spoken Hebrew goes through `utter()` in js/ai.js, which adds niqqud from js/niqqud.js (spoken only, never shown). When a voice misreads a word, add it there.
+- The My Blog page (blog.html, js/blog/) writes its Hebrew the same pointed way and shares the ניקוד switch (js/niqqud-view.js). Its AI calls go through `ask()`, so they show in its Engine Room drawer; every Buddy feature has a rules-only fallback.
 - The Present Simple page (grammar.html, js/grammar/) has no AI calls; its content is in js/grammar/data.js. All its Hebrew is written with full niqqud on top of the full spelling (פּוֹעַל, not פֹּעַל), so removing the marks gives normal spelling: the ניקוד switch shows it with or without marks, and Buddy always reads the pointed text. New Hebrew there must be written the same way. The Practice tab holds the class worksheets “Present simple.pdf” and “Verb To Be.pdf” (`SHEET`, `BE_SHEET`); keep them as written, typos included.
 
 - Every AI call goes through `engine.start()` so it appears in the AI Engine Room with its steps.
@@ -34,4 +35,4 @@ Vanilla HTML + CSS + ES modules, no build step. Needs a server (secure context f
 
 ## Not verified yet
 
-The test browser had no Gemini Nano and no working Translator, so these paths were never seen working: Nano meanings/pairs/examples, Nano badge design (only the magic-dice fallback was seen), quiz sentence grading, native tool calling, WebMCP, real translations (word, pair, example). Check them in Chrome with the AI flags on (list in README).
+The test browser had no Gemini Nano and no working Translator, so these paths were never seen working: Nano meanings/pairs/examples, Nano badge design (only the magic-dice fallback was seen), the blog page's Nano check / sentence watch / ideas (only the rule fallbacks were seen), quiz sentence grading, native tool calling, WebMCP, real translations (word, pair, example). Check them in Chrome with the AI flags on (list in README).

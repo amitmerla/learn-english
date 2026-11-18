@@ -64,7 +64,7 @@
         "learned": { "type": "boolean", "default": false, "description": "The pupil marked it with a star." },
         "mastered": { "type": "boolean", "default": false, "description": "The pupil passed the Word Challenge for it." },
         "source": {
-          "enum": ["typed", "image", "buddy", "demo", "imported"],
+          "enum": ["typed", "image", "file", "buddy", "demo", "imported"],
           "default": "imported",
           "description": "How the word was first added."
         },

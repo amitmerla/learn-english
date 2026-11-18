@@ -14,6 +14,7 @@ import { initOcr } from './ocr.js';
 import { initTour, startTour, tourSeen } from './tour.js';
 import { initQuiz, startQuiz } from './quiz.js';
 import { initTransfer } from './transfer.js';
+import { initDocFile } from './docfile.js';
 import { initProfile, openProfile, hasProfile } from './profile.js';
 
 hooks.showWord = showWord;
@@ -28,6 +29,7 @@ initOcr();
 initTour();
 initQuiz();
 initTransfer();
+initDocFile();
 
 const lang = $('#target-lang');
 lang.value = store.lang;

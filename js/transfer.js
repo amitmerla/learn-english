@@ -9,7 +9,7 @@ export const FORMAT = 'word-wizard.word-list';
 export const VERSION = 1;
 const MAX_WORDS = 5000;
 const MAX_FILE = 5 * 1024 * 1024;
-const SOURCES = new Set(['typed', 'image', 'buddy', 'demo', 'imported']);
+const SOURCES = new Set(['typed', 'image', 'file', 'buddy', 'demo', 'imported']);
 const LANG = /^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/;
 const WORD = /^[a-z][a-z' -]*$/;
 

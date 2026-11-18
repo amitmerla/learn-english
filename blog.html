@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My Blog · Word Wizard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Rubik:wght@400;500;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/grammar.css">
+    <link rel="stylesheet" href="css/blog.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✍️</text></svg>">
+</head>
+<body class="grammar-page blog-page">
+<div class="bg-orbs" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+<canvas id="fx-canvas" aria-hidden="true"></canvas>
+
+<header class="g-header">
+    <a class="g-back" href="index.html" data-tip="Go back to your words in Word Wizard.">
+        <span class="brand-logo" aria-hidden="true">🪄</span><span>Word Wizard</span>
+    </a>
+    <div class="g-title">
+        <h1><span class="grad-text">My Blog</span> ✍️</h1>
+        <p dir="rtl">כּוֹתְבִים בְּלוֹג קָצָר עַל עַצְמְכֶם, עִם בָּאדִי לְיַד</p>
+    </div>
+    <div class="g-side">
+        <div class="g-stat" id="b-ai" data-tip="">🧠 <span>…</span></div>
+        <button class="g-niqqud" id="g-niqqud" type="button" aria-pressed="true" data-tip="Show the Hebrew with or without niqqud (vowel marks). Buddy always reads it with niqqud.">
+            <span class="gn-icon" aria-hidden="true">אָ</span><span dir="rtl">נִיקּוּד</span><span class="switch-dot" aria-hidden="true"></span>
+        </button>
+    </div>
+</header>
+
+<nav class="g-tabs b-steps" role="tablist" aria-label="Blog steps">
+    <button role="tab" data-tab="plan" aria-selected="true" data-tip="Step 1: read Ali's blog, learn the tips, and plan your four paragraphs.">
+        <span class="t-icon">🗺️</span><b dir="rtl">מְתַכְנְנִים</b><small>1 · Plan</small>
+    </button>
+    <button role="tab" data-tab="write" data-tip="Step 2: write your blog. Buddy helps you while you write.">
+        <span class="t-icon">✍️</span><b dir="rtl">כּוֹתְבִים</b><small>2 · Write</small>
+    </button>
+    <button role="tab" data-tab="publish" data-tip="Step 3: see your blog like a real web page, and check your stars.">
+        <span class="t-icon">🚀</span><b dir="rtl">מְפַרְסְמִים</b><small>3 · Publish</small>
+    </button>
+    <span class="g-tab-ink" aria-hidden="true"></span>
+</nav>
+
+<main class="g-main b-main">
+
+    <!-- ============================================================ 1 · plan -->
+    <section class="g-panel" id="tab-plan" role="tabpanel">
+        <div class="g-intro" dir="rtl">
+            <h2>🗺️ קוֹדֶם מִסְתַּכְּלִים עַל דּוּגְמָה</h2>
+            <p>זֶה הַבְּלוֹג שֶׁל <bdi class="en" dir="ltr">Ali</bdi>. קִרְאוּ אוֹתוֹ, וְהַקְשִׁיבוּ לוֹ 🔊</p>
+        </div>
+
+        <div class="model-tools">
+            <button class="btn btn-primary btn-sm" id="model-say" type="button" data-tip="Listen to Ali's blog.">🔊 Listen</button>
+            <button class="btn btn-ghost btn-sm" id="model-caps" type="button" aria-pressed="false" data-tip="Light up every capital letter in Ali's blog.">🔠 Capital letters</button>
+            <button class="btn btn-ghost btn-sm" id="model-parts" type="button" aria-pressed="false" data-tip="Show the four parts of Ali's blog.">🧱 Paragraphs</button>
+        </div>
+        <div id="model-blog"></div>
+
+        <div class="g-intro tips-intro" dir="rtl">
+            <h2>💡 טִיפִּים לִכְתִיבָה</h2>
+        </div>
+        <div class="tips-grid" id="tips-grid" dir="rtl"></div>
+
+        <div class="g-intro" dir="rtl">
+            <h2>📝 הָרַעְיוֹנוֹת שֶׁלִּי</h2>
+            <p>כִּתְבוּ כַּמָּה מִילִּים לְכָל חֵלֶק, בְּאַנְגְּלִית אוֹ בְּעִבְרִית. זֶה רַק בִּשְׁבִילְכֶם.</p>
+        </div>
+        <label class="blog-name" data-tip="The name of your blog, like “Ali's Blog”.">
+            <span>📛 Blog name</span>
+            <input id="blog-name" type="text" maxlength="28" autocomplete="off" spellcheck="false" dir="ltr" placeholder="Noa's Blog">
+        </label>
+        <div class="plan-grid" id="plan-grid" dir="rtl"></div>
+        <div class="g-actions"><button class="btn btn-glow" id="go-write" type="button" data-tip="Your plan is ready. Let's write!">✍️ לִכְתִיבָה · Let's write</button></div>
+    </section>
+
+    <!-- ============================================================ 2 · write -->
+    <section class="g-panel" id="tab-write" role="tabpanel" hidden>
+        <div class="write-layout">
+            <div class="write-main">
+                <div class="tracker" id="tracker" dir="rtl" data-tip="The four parts of your blog. Each one lights up when you write about it."></div>
+                <div class="editor-card">
+                    <div class="editor-head">
+                        <b id="editor-title" dir="ltr">My Blog</b>
+                        <span class="editor-stats" id="editor-stats"></span>
+                    </div>
+                    <div class="editor" id="editor">
+                        <div class="editor-mirror" id="editor-mirror" aria-hidden="true"></div>
+                        <textarea id="editor-text" dir="ltr" spellcheck="true" autocapitalize="sentences" aria-label="Write your blog here" placeholder="My name is …"></textarea>
+                    </div>
+                    <div class="starters" id="starters" data-tip="Not sure how to start a sentence? Tap one, and it goes into your blog."></div>
+                </div>
+                <div class="issues" id="issues" aria-live="polite"></div>
+            </div>
+
+            <aside class="buddy-panel" aria-label="Buddy helps you write">
+                <div class="bp-head">
+                    <span class="bp-fox" id="bp-fox" aria-hidden="true">🦊</span>
+                    <div><b>Buddy</b><small id="bp-mode"></small></div>
+                    <label class="bp-watch" data-tip="When this is on, Buddy reads each sentence you finish and helps right away.">
+                        <span class="switch"><input type="checkbox" id="bp-watch" checked></span><span>👀</span>
+                    </label>
+                </div>
+                <div class="bp-log" id="bp-log" aria-live="polite"></div>
+                <div class="bp-actions">
+                    <button class="btn btn-glow btn-sm" id="bp-check" type="button" data-tip="Buddy reads your whole blog and helps you fix it.">✨ Check my blog</button>
+                    <button class="btn btn-ghost btn-sm" id="bp-idea" type="button" data-tip="Stuck? Buddy gives you an idea for what to write next.">💡 I'm stuck</button>
+                </div>
+                <form class="bp-ask" id="bp-ask" autocomplete="off" data-tip="Write a word or sentence in Hebrew, and Buddy tells you how to say it in English.">
+                    <input id="bp-ask-input" dir="rtl" placeholder="אֵיךְ אוֹמְרִים בְּאַנְגְּלִית…?" aria-label="How do I say it in English?">
+                    <button class="btn btn-primary btn-sm" type="submit">🌍</button>
+                </form>
+            </aside>
+        </div>
+        <div class="g-actions"><button class="btn btn-glow" id="go-publish" type="button" data-tip="Finished? See your blog like a real web page!">🚀 לְפִרְסוּם · Publish</button></div>
+    </section>
+
+    <!-- ============================================================ 3 · publish -->
+    <section class="g-panel" id="tab-publish" role="tabpanel" hidden>
+        <div id="my-blog"></div>
+        <div class="rubric" id="rubric" dir="rtl"></div>
+        <div class="g-actions">
+            <button class="btn btn-primary" id="pub-say" type="button" data-tip="Listen to your blog.">🔊 Listen</button>
+            <button class="btn btn-ghost" id="pub-edit" type="button" data-tip="Go back and change your blog.">✏️ Edit</button>
+            <button class="btn btn-ghost" id="pub-print" type="button" data-tip="Print your blog, or save it as a PDF.">🖨️ Print</button>
+        </div>
+    </section>
+</main>
+
+<!-- AI Engine Room: every AI call on this page shows up here -->
+<button class="engine-fab" id="engine-fab" type="button" data-tip="Peek inside the AI: every question Buddy sends to the AI, with each step.">⚙️ <span>AI</span><i></i></button>
+<aside class="engine-drawer" id="engine-drawer" hidden aria-label="AI Engine Room">
+    <div class="panel-head">
+        <div class="panel-title"><span class="panel-icon" aria-hidden="true">⚙️</span><h2>AI Engine Room</h2></div>
+        <div class="engine-actions">
+            <span class="now" id="engine-now" data-tip="What the AI is doing right this second."><i></i><span>Idle</span></span>
+            <button class="btn btn-ghost btn-sm" id="engine-clear" type="button" data-tip="Clear the list of AI runs.">🧹</button>
+            <button class="btn btn-ghost btn-sm" id="engine-close" type="button" aria-label="Close" data-tip="Close the Engine Room.">✕</button>
+        </div>
+    </div>
+    <div class="engine-log" id="engine-log"></div>
+</aside>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<div class="tooltip" id="tooltip" role="tooltip"></div>
+
+<script type="module" src="js/blog/main.js"></script>
+</body>
+</html>
