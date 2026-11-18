@@ -6,7 +6,7 @@ import { hooks } from './tools.js';
 import { talk, homeVoiceOn } from './voice.js';
 import { ask, lmReady, translate, speak, speakParts, hasVoice, listen, detectLanguage, toEnglish, state } from './ai.js';
 import { builtinPair, wordIn } from './pairs.js';
-import { builtinSenses, findSenses, pickPatch, senseText, allMeanings } from './senses.js';
+import { builtinSenses, nanoSenses, pickPatch, senseText, allMeanings } from './senses.js';
 
 const grid = $('#words-grid');
 const empty = $('#words-empty');
@@ -30,7 +30,9 @@ function paintInfo(w, node) {
     node.style.setProperty('--hue', hue(w.text));
     const senses = sensesOf(w, lang);
     if (senses) info.append(sensesChip(w, senses, lang));
-    else if (w.tr?.[lang]) info.append(chip('tr', LANG_NAMES[lang], document.createTextNode(w.tr[lang]), { dir: RTL.has(lang) ? 'rtl' : 'ltr', lang }));
+    else if (w.tr?.[lang]) info.append(chip('tr', LANG_NAMES[lang], el('div', {},
+        document.createTextNode(w.tr[lang]),
+        checking.has(w.id) ? el('small', { class: 'sense-checking', dir: 'ltr', 'data-tip': 'The AI is checking if this word has another meaning too.', text: '🔎 other meanings?' }) : ''), { dir: RTL.has(lang) ? 'rtl' : 'ltr', lang }));
     if (w.meaning) info.append(chip('mean', 'Meaning', document.createTextNode(w.meaning)));
     if (w.pair) info.append(pairChip(w, lang));
     if (w.example) info.append(exampleChip(w, lang));
@@ -74,6 +76,31 @@ function sensesChip(w, senses, lang) {
             'data-tip': `Tap if this is the meaning in your lesson. The memory pair and the example will fit it too.`,
         }, el('b', { dir, lang, text: senseText(s, lang) || '?' }), s.hint ? el('small', { text: s.hint }) : ''))));
 }
+
+// Several meanings: show them all until the pupil picks one (or keep the one already picked).
+function offerSenses(w, senses, lang) {
+    const keep = Number.isInteger(w.sense) && senseText(w.senses?.[w.sense] ?? {}, lang) && w.senses.length === senses.length ? w.sense : null;
+    store.update(w.text, keep === null ? { senses, sense: null, tr: { ...w.tr, [lang]: allMeanings(senses, lang) } } : pickPatch(w, senses, keep, lang));
+    if (keep !== null) return;
+    toast(`“${w.text}” has ${senses.length} meanings! Tap the one from your lesson.`, { icon: '🔀', ms: 5000 });
+    talk(`${w.text} has ${senses.length} meanings. Tap the one from your lesson.`, `למילה [[${w.text}]] יש ${senses.length === 2 ? 'שתי' : 'שלוש'} משמעויות. בחרו את המשמעות מהשיעור.`);
+}
+
+// Nano looks for more meanings while the pupil already sees the translation.
+const checking = new Set(); // word ids
+async function moreMeanings(w, lang) {
+    if (checking.has(w.id)) return;
+    checking.add(w.id);
+    repaint(w);
+    const senses = await nanoSenses(w.text, lang, LANG_NAMES[lang]);
+    checking.delete(w.id);
+    const cur = store.words.find(x => x.id === w.id);
+    if (!cur) return;
+    if (senses?.length > 1 && store.lang === lang && !Number.isInteger(cur.sense)) offerSenses(cur, senses, lang);
+    else if (senses) store.update(cur.text, { senses: [] });
+    else repaint(cur);
+}
+const repaint = w => { const node = cards.get(w.id); if (node) paintInfo(w, node); };
 
 // "Remember it" chip: the memory pair with the word highlighted, its translation, and a speak button.
 function pairChip(w, lang) {
@@ -247,24 +274,20 @@ const ACTIONS = {
         btn.classList.remove('busy');
     },
 
+    // Fast first: the built-in meanings, or the Translator's one meaning, show at once.
+    // Then (not blocking the card) the pair and example get translated, and Nano looks for more meanings.
     async tr(w, btn) {
+        const lang = store.lang;
+        const built = builtinSenses(w.text, lang);
+        const known = w.senses?.length > 1 && w.senses.every(x => senseText(x, lang)) ? w.senses : null;
         await busy(btn, async () => {
-            const lang = store.lang;
-            const senses = await findSenses(w.text, lang, LANG_NAMES[lang]);
-            if (senses.length > 1) {
-                // Several meanings: show them all until the pupil picks one (or keep the one already picked).
-                const keep = Number.isInteger(w.sense) && senseText(w.senses?.[w.sense] ?? {}, lang) && w.senses.length === senses.length ? w.sense : null;
-                store.update(w.text, keep === null ? { senses, sense: null, tr: { ...w.tr, [lang]: allMeanings(senses, lang) } } : pickPatch(w, senses, keep, lang));
-                if (keep === null) {
-                    toast(`“${w.text}” has ${senses.length} meanings! Tap the one from your lesson.`, { icon: '🔀', ms: 5000 });
-                    talk(`${w.text} has ${senses.length} meanings. Tap the one from your lesson.`, `למילה [[${w.text}]] יש ${senses.length === 2 ? 'שתי' : 'שלוש'} משמעויות. בחרו את המשמעות מהשיעור.`);
-                }
-            } else {
-                store.update(w.text, { senses: [], sense: null, tr: { ...w.tr, [lang]: senseText(senses[0], lang) } });
-            }
-            await translatePair(w);
-            await translateExample(w);
+            if (built || known) return offerSenses(w, built || known, lang);
+            const t = await translate(w.text);
+            store.update(w.text, { sense: null, tr: { ...w.tr, [lang]: t } });
         });
+        Promise.all([translatePair(w), translateExample(w)]);
+        // Nano is asked once per word: `senses: []` means it found just one meaning.
+        if (!built && !known && !Array.isArray(w.senses) && lmReady()) moreMeanings(w, lang);
     },
 
     pickSense(w, btn) {

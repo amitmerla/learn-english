@@ -1557,3 +1557,5 @@ button { cursor: pointer; }
     transition: background .2s, transform .15s;
 }
 .sense-more:hover { background: rgba(251, 191, 36, .3); transform: scale(1.06); }
+.sense-checking { display: block; font-size: 11.5px; font-weight: 700; color: var(--text-faint); text-align: left; animation: pulse-soft 1.4s ease-in-out infinite; }
+@keyframes pulse-soft { 50% { opacity: .45; } }

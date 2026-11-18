@@ -32,7 +32,7 @@ Vanilla HTML + CSS + ES modules, no build step. Needs a server (secure context f
 - Tools are defined once in js/tools.js and shared by Buddy's JSON plan, native Prompt API tools and WebMCP.
 - Built-in pairs and example sentences (~250 words) live in js/pairs.js; new or imported words get them automatically.
 - Export format: schema/word-list.v1.schema.json. Add new word fields as optional and keep old files importable.
-- All availability checks have timeouts: in some builds `Translator.availability()` never resolves.
+- All availability checks have timeouts: in some builds `Translator.availability()` never resolves. `translate()` gives the Translator 6 s, then uses Nano (and skips a stuck translator until it is ready); results are cached for the visit, and the translator is created early (or its download started on the first tap) so 🌐 Translate is fast. Keep slow AI work (Nano meanings, pair / example translations) off the button's busy state.
 
 ## Not verified yet
 

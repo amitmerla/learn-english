@@ -64,6 +64,7 @@ export async function checkAll() {
     FEATURES.filter(f => f.id !== 'webmcp').forEach(f => mark(f.id, 'checking'));
 
     await Promise.all([checkPrompt().then(checkTranslator), checkDetector(), checkTextDetector()]);
+    warmNano();
     mark('tts', 'speechSynthesis' in globalThis ? 'available' : 'unavailable');
     mark('stt', SR ? 'available' : 'unavailable', SR ? '' : 'Try Chrome or Edge to talk with your voice.');
     // WebMCP is marked by tools.js once it registers.
@@ -128,6 +129,12 @@ export async function checkTranslator() {
         const a = await withTimeout(Translator.availability({ sourceLanguage: 'en', targetLanguage: lang }));
         if (a === 'timeout') return mark('translator', 'downloadable', `English → ${LANG_NAMES[lang]}. The browser did not answer yet. Try “Get it”.`);
         mark('translator', a, `English → ${LANG_NAMES[lang]}`);
+        if (a === 'available') warmTranslator(lang);
+        // Not downloaded yet: start it on the pupil's first tap anywhere (downloads need a tap),
+        // so it is ready before they press 🌐 Translate.
+        if (a === 'downloadable') addEventListener('pointerdown', () => {
+            if (state.translator.status === 'downloadable' && store.lang === lang) getTranslator('en', lang).catch(() => {});
+        }, { once: true, capture: true });
     } catch { mark('translator', 'unavailable', `English → ${LANG_NAMES[lang]} is not supported.`); }
 }
 
@@ -274,30 +281,52 @@ export async function readImageWithNano(blob, run) {
 /* ================================================================ Translator */
 
 const translators = new Map();
+// A translator that did not answer in time (still downloading, or a build where it hangs):
+// skip it and use Nano until it is ready, instead of waiting again on every word.
+const stuck = new Set();
+// Translations already made in this visit: asking twice is instant.
+const done = new Map();
+const TRANSLATE_MS = 6000;
 
 async function getTranslator(from, to, monitor) {
     const key = `${from}>${to}`;
     if (!translators.has(key)) {
         translators.set(key, Translator.create({ sourceLanguage: from, targetLanguage: to, monitor: monitor ?? monitorFor('translator') })
-            .catch(e => { translators.delete(key); throw e; }));
+            .then(t => { stuck.delete(key); return t; })
+            .catch(e => { translators.delete(key); stuck.delete(key); throw e; }));
     }
     return translators.get(key);
+}
+
+/** Get the translator ready before the first click, so the first word is fast too. Only when it is already downloaded. */
+export function warmTranslator(to = store.lang) {
+    if ('Translator' in globalThis && state.translator.status === 'available') getTranslator('en', to).catch(() => {});
+}
+
+/** Get the Nano session ready in the background (no download is started). */
+export function warmNano() {
+    if (lmReady()) getBase().catch(() => {});
 }
 
 /** Translate one English word to the chosen language. Uses Translator, then Nano. */
 export async function translate(word, to = store.lang, { quiet = false } = {}) {
     const name = LANG_NAMES[to] ?? to;
-    if ('Translator' in globalThis && !['unavailable'].includes(state.translator.status)) {
+    const memo = `${to}|${word}`;
+    if (done.has(memo)) return done.get(memo);
+    const key = `en>${to}`;
+    const skip = stuck.has(key) && lmReady();
+    if ('Translator' in globalThis && !['unavailable'].includes(state.translator.status) && !skip) {
         const run = quiet ? null : engine.start({ title: `Translate “${word}” → ${name}`, icon: '🌐', prompt: word, engine: 'Translator API' });
         try {
             const s = run?.step('🌐', `Getting the English → ${name} translator`);
-            const t = await getTranslator('en', to);
-            s?.done();
-            const s2 = run?.step('🔁', 'Translating');
-            const out = await t.translate(word);
-            s2?.done();
+            let timer;
+            const out = await Promise.race([
+                getTranslator('en', to).then(t => { s?.done(); run?.step('🔁', 'Translating'); return t.translate(word); }),
+                new Promise((_, reject) => { timer = setTimeout(() => { stuck.add(key); reject(new Error('The translator is still getting ready. Try again in a minute!')); }, TRANSLATE_MS); }),
+            ]).finally(() => clearTimeout(timer));
             run?.finish(true, out);
             if (state.translator.status !== 'available') checkTranslator();
+            done.set(memo, out);
             return out;
         } catch (e) {
             run?.step('⚠️', 'Translator could not do it').fail(e.message);
@@ -306,11 +335,13 @@ export async function translate(word, to = store.lang, { quiet = false } = {}) {
         }
     }
     if (lmReady()) {
-        return ask({
+        const out = (await ask({
             title: `Translate “${word}” → ${name} (Nano)`,
             icon: '🌐',
             prompt: `Translate the English word "${word}" into ${name}. Reply with only the ${name} translation, nothing else.`,
-        });
+        })).trim();
+        done.set(memo, out);
+        return out;
     }
     throw new Error('No translator is available in this browser.');
 }

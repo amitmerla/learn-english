@@ -3,9 +3,10 @@
 // Until then the card shows every meaning. Each meaning brings its own memory pair and example,
 // so choosing one also changes those to fit.
 //
-// Sources: this built-in list (works without AI) → Gemini Nano → the Translator (one meaning only).
+// Sources: this built-in list (instant, no AI). Other words show the Translator's one meaning at once,
+// and Gemini Nano then looks for more meanings in the background.
 
-import { ask, lmReady, translate } from './ai.js';
+import { ask, lmReady } from './ai.js';
 import { wordIn } from './pairs.js';
 
 // [Hebrew, emoji + simple English hint, memory pair, Hebrew of the pair, example sentence]
@@ -160,11 +161,10 @@ export function pickPatch(w, senses, i, lang) {
     return patch;
 }
 
-/** Find the word's meanings: built-in list → Gemini Nano → one meaning from the Translator. */
-export async function findSenses(word, lang, name) {
-    const built = builtinSenses(word, lang);
-    if (built) return built;
-    if (lmReady()) {
+/** Ask Gemini Nano for the word's different meanings. Slow (a few seconds), so callers run it in the background. Null when it can't. */
+export async function nanoSenses(word, lang, name) {
+    if (!lmReady()) return null;
+    {
         try {
             const r = await ask({
                 title: `The meanings of “${word}”`, icon: '🔀',
@@ -198,7 +198,7 @@ a memory pair (the easiest 2-3 word everyday phrase with "${word}" in this meani
             const seen = new Set();
             const uniq = out.filter(s => !seen.has(s.tr[lang]) && seen.add(s.tr[lang]));
             if (uniq.length) return uniq;
-        } catch { /* use the translator */ }
+        } catch { /* no meanings from Nano */ }
     }
-    return [{ tr: { [lang]: await translate(word, lang) } }];
+    return null;
 }
