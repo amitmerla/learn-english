@@ -171,7 +171,11 @@ export async function downloadFeature(id) {
 export const lmReady = () => state.prompt.status === 'available';
 export const visionReady = () => state.vision.status === 'available';
 
+// Short jobs (translations, word meanings) use a lean session without Buddy's personality, so less to read and write.
+export const LEAN = 'You help children learn English words. Answer with only what is asked, no extra words.';
+
 let baseSession = null;
+let leanSession = null;
 let chatSession = null;
 
 async function getBase() {
@@ -179,9 +183,14 @@ async function getBase() {
     return baseSession;
 }
 
-async function freshTaskSession() {
-    const base = await getBase();
-    return base.clone ? base.clone() : LM.create({ ...TEXT_IO, initialPrompts: [{ role: 'system', content: SYSTEM }] });
+async function getLean() {
+    if (!leanSession) leanSession = LM.create({ ...TEXT_IO, initialPrompts: [{ role: 'system', content: LEAN }] }).catch(e => { leanSession = null; throw e; });
+    return leanSession;
+}
+
+async function freshTaskSession(lean) {
+    const base = await (lean ? getLean() : getBase());
+    return base.clone ? base.clone() : LM.create({ ...TEXT_IO, initialPrompts: [{ role: 'system', content: lean ? LEAN : SYSTEM }] });
 }
 
 // Streams a prompt, coping with both cumulative and delta chunks.
@@ -196,12 +205,12 @@ export async function streamPrompt(session, input, opts, onText) {
 }
 
 /** One-shot question for the model, fully logged in the engine room. */
-export async function ask({ title, icon = '🧠', prompt, schema, onText }) {
+export async function ask({ title, icon = '🧠', prompt, schema, onText, lean = false }) {
     const run = engine.start({ title, icon, prompt, engine: 'Gemini Nano' });
     setFeature('prompt', { status: 'active', label: 'Working' });
     try {
         const s1 = run.step('🧪', 'Opening a fresh AI session');
-        const session = await freshTaskSession();
+        const session = await freshTaskSession(lean);
         s1.done();
         const s2 = run.step('💭', schema ? 'Thinking (answer shape is fixed by a JSON schema)' : 'Thinking and writing');
         let n = 0;
@@ -305,7 +314,7 @@ export function warmTranslator(to = store.lang) {
 
 /** Get the Nano session ready in the background (no download is started). */
 export function warmNano() {
-    if (lmReady()) getBase().catch(() => {});
+    if (lmReady()) { getBase().catch(() => {}); getLean().catch(() => {}); }
 }
 
 /** Translate one English word to the chosen language. Uses Translator, then Nano. */
@@ -337,9 +346,9 @@ export async function translate(word, to = store.lang, { quiet = false } = {}) {
     if (lmReady()) {
         const out = (await ask({
             title: `Translate “${word}” → ${name} (Nano)`,
-            icon: '🌐',
-            prompt: `Translate the English word "${word}" into ${name}. Reply with only the ${name} translation, nothing else.`,
-        })).trim();
+            icon: '🌐', lean: true,
+            prompt: `${name} translation of "${word}":`,
+        })).trim().split('\n')[0].replace(/^["“'«]+|["”'».]+$/g, '').trim();
         done.set(memo, out);
         return out;
     }

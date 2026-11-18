@@ -161,44 +161,46 @@ export function pickPatch(w, senses, i, lang) {
     return patch;
 }
 
-/** Ask Gemini Nano for the word's different meanings. Slow (a few seconds), so callers run it in the background. Null when it can't. */
+/** Ask Gemini Nano for the word's different meanings: just the translation and a short hint each, so it is quick. Null when it can't. */
 export async function nanoSenses(word, lang, name) {
     if (!lmReady()) return null;
-    {
-        try {
-            const r = await ask({
-                title: `The meanings of “${word}”`, icon: '🔀',
-                prompt: `A child in 5th grade learns the English word "${word}". Does it have more than one common meaning that needs a different ${name} word?
-List 1 to 3 meanings, the most common first. Only list truly different meanings that a 10-year-old meets; if there is one main meaning, list only it.
-For each meaning give: the ${name} translation (1-3 words, like in a dictionary), one fitting emoji, a very simple English hint (max 7 words, without the word itself),
-a memory pair (the easiest 2-3 word everyday phrase with "${word}" in this meaning) with its ${name} translation, and a short simple example sentence (max 9 words) using "${word}" in this meaning.`,
-                schema: {
-                    type: 'object',
-                    properties: {
-                        meanings: {
-                            type: 'array', minItems: 1, maxItems: 3,
-                            items: {
-                                type: 'object',
-                                properties: { translation: { type: 'string' }, emoji: { type: 'string' }, hint: { type: 'string' }, pair: { type: 'string' }, pairTranslation: { type: 'string' }, example: { type: 'string' } },
-                                required: ['translation', 'emoji', 'hint', 'pair', 'pairTranslation', 'example'],
-                            },
-                        },
+    try {
+        const r = await ask({
+            title: `The meanings of “${word}”`, icon: '🔀', lean: true,
+            prompt: `"${word}": its common meanings that need different ${name} words (1-3). Each: ${name} translation, and a hint (emoji + max 5 easy English words).`,
+            schema: {
+                type: 'object',
+                properties: {
+                    meanings: {
+                        type: 'array', minItems: 1, maxItems: 3,
+                        items: { type: 'object', properties: { translation: { type: 'string' }, hint: { type: 'string' } }, required: ['translation', 'hint'] },
                     },
-                    required: ['meanings'],
                 },
-            });
-            const has = t => wordIn(word).test(t);
-            const out = r.meanings.filter(m => m.translation?.trim()).slice(0, 3).map(m => ({
-                tr: { [lang]: m.translation.trim() },
-                hint: `${m.emoji} ${m.hint}`.trim(),
-                ...(has(m.pair) && m.pair.split(/\s+/).length <= 4 ? { pair: m.pair.trim().replace(/[.”"]$/, ''), pairTr: m.pairTranslation ? { [lang]: m.pairTranslation.trim() } : {} } : {}),
-                ...(has(m.example) ? { example: m.example.trim() } : {}),
-            }));
-            // Two meanings with the same translation are really one.
-            const seen = new Set();
-            const uniq = out.filter(s => !seen.has(s.tr[lang]) && seen.add(s.tr[lang]));
-            if (uniq.length) return uniq;
-        } catch { /* no meanings from Nano */ }
-    }
-    return null;
+                required: ['meanings'],
+            },
+        });
+        // Two meanings with the same translation are really one.
+        const seen = new Set();
+        const out = r.meanings.map(m => ({ tr: { [lang]: m.translation.trim() }, hint: m.hint.trim() }))
+            .filter(s => s.tr[lang] && !seen.has(s.tr[lang]) && seen.add(s.tr[lang])).slice(0, 3);
+        return out.length ? out : null;
+    } catch { return null; }
+}
+
+/** A memory pair and an example for one meaning, asked only when the pupil picks it. Null when it can't. */
+export async function nanoPairFor(word, sense) {
+    if (!lmReady()) return null;
+    try {
+        const r = await ask({
+            title: `A pair and example for “${word}”`, icon: '🔗', lean: true,
+            prompt: `"${word}" meaning ${sense.hint}. Give an easy 2-3 word phrase and a short sentence (max 8 words) with it, for a 10-year-old.`,
+            schema: { type: 'object', properties: { pair: { type: 'string' }, example: { type: 'string' } }, required: ['pair', 'example'] },
+        });
+        const has = t => wordIn(word).test(t);
+        const pair = r.pair.trim().replace(/[.”"]$/, '');
+        return {
+            ...(has(pair) && pair.split(/\s+/).length <= 4 ? { pair, pairTr: {} } : {}),
+            ...(has(r.example) ? { example: r.example.trim() } : {}),
+        };
+    } catch { return null; }
 }

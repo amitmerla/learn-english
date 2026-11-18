@@ -6,7 +6,7 @@ import { hooks } from './tools.js';
 import { talk, homeVoiceOn } from './voice.js';
 import { ask, lmReady, translate, speak, speakParts, hasVoice, listen, detectLanguage, toEnglish, state } from './ai.js';
 import { builtinPair, wordIn } from './pairs.js';
-import { builtinSenses, nanoSenses, pickPatch, senseText, allMeanings } from './senses.js';
+import { builtinSenses, nanoSenses, nanoPairFor, pickPatch, senseText, allMeanings } from './senses.js';
 
 const grid = $('#words-grid');
 const empty = $('#words-empty');
@@ -297,7 +297,15 @@ const ACTIONS = {
         if (!senses?.[i]) return;
         confettiAt(btn, 30);
         store.update(w.text, pickPatch(w, senses, i, lang));
-        translatePair(store.find(w.text));
+        translatePair(w);
+        // A meaning from Nano has no pair or example yet: ask for them now, only for the one picked.
+        const s = senses[i];
+        if (!s.pair && !s.example && lmReady()) nanoPairFor(w.text, s).then(extra => {
+            if (!extra || w.sense !== i || !store.find(w.text)) return;
+            Object.assign(s, extra);
+            store.update(w.text, pickPatch(w, senses, i, lang));
+            if (extra.pair) translatePair(w);
+        });
     },
 
     showSenses(w) {

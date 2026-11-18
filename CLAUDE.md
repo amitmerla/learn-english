@@ -27,7 +27,7 @@ Vanilla HTML + CSS + ES modules, no build step. Needs a server (secure context f
 - The My Blog page (blog.html, js/blog/) writes its Hebrew the same pointed way and shares the ניקוד switch (js/niqqud-view.js). Its AI calls go through `ask()`, so they show in its Engine Room drawer; every Buddy feature has a rules-only fallback.
 - The Present Simple page (grammar.html, js/grammar/) has no AI calls; its content is in js/grammar/data.js. All its Hebrew is written with full niqqud on top of the full spelling (פּוֹעַל, not פֹּעַל), so removing the marks gives normal spelling: the ניקוד switch shows it with or without marks, and Buddy always reads the pointed text. New Hebrew there must be written the same way. The Practice tab holds the class worksheets “Present simple.pdf” and “Verb To Be.pdf” (`SHEET`, `BE_SHEET`); keep them as written, typos included.
 
-- Every AI call goes through `engine.start()` so it appears in the AI Engine Room with its steps.
+- Every AI call goes through `engine.start()` so it appears in the AI Engine Room with its steps. Short jobs (translations, a word's meanings, a pair for a picked meaning) use `ask({ lean: true })`: a session without Buddy's personality, and a prompt of one or two lines with a small schema. Keep them that short: answer length is what makes Nano slow.
 - Spoken output: `talk(en, he)` for fixed phrases (Hebrew may mark English words as `[[word]]`), `talkDynamic(text)` for AI text, `speakParts()` for mixed English/Hebrew.
 - Tools are defined once in js/tools.js and shared by Buddy's JSON plan, native Prompt API tools and WebMCP.
 - Built-in pairs and example sentences (~250 words) live in js/pairs.js; new or imported words get them automatically.
